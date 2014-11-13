@@ -38,6 +38,21 @@ use Test::Most;
 }
 
 {
+    package Sub2;
+
+    use Moose;
+    extends 'Sub1';
+
+    has 'q_str' => (
+        is       => 'ro',
+        isa      => 'Str',
+        required => 1,
+        init_arg => 'str',
+    );
+
+}
+
+{
     my $obj = Base->new();
     isa_ok $obj, 'MooseX::Monadic';
     isa_ok $obj, 'Base';
@@ -92,7 +107,44 @@ use Test::Most;
       'Moose::Exception::AttributeIsRequired';
 
     is $error->attribute_name, 'r_str', 'attribute_name';
-    is $error->class_name, 'Sub1';
+    is $error->class_name, 'Sub1', 'class_name';
+}
+
+{
+    my $obj = Base->new(
+        as    => [qw/ Sub2 Sub1 /],
+        num   => 1,
+        r_str => 'x',
+        str   => 'y',
+    );
+    isa_ok $obj, 'MooseX::Monadic';
+    isa_ok $obj, 'Base';
+    isa_ok $obj, 'Sub1';
+    isa_ok $obj, 'Sub2';
+
+    ok !$obj->has_class_error, 'no errors';
+}
+
+{
+    my $obj = Base->new(
+        as    => [qw/ Sub2 Sub1 /],
+        num   => 1,
+        r_str => 'x',
+    );
+    isa_ok $obj, 'MooseX::Monadic';
+    isa_ok $obj, 'Base';
+    isa_ok $obj, 'Sub1';
+    ok !$obj->isa('Sub2'), 'not a Sub2';
+
+    ok $obj->has_class_error, 'has error';
+
+    ok my $error = $obj->class_error, 'got error';
+
+    isa_ok $error,
+      'Moose::Exception::AttributeIsRequired';
+
+    is $error->attribute_name, 'q_str', 'attribute_name';
+    is $error->class_name, 'Sub2';
 }
 
 
