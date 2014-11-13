@@ -13,6 +13,78 @@ use Try::Tiny;
 
 MooseX::Monadic - monadic classes with Moose
 
+=head1 SYNOPSIS
+
+  {
+    package Base;
+
+    use Moose;
+    extends 'MooseX::Monadic';
+  }
+
+  {
+    package Sub1;
+
+    use Moose;
+    extends 'Base';
+
+    has num => (
+        is  => 'ro',
+        isa => 'Int',
+    );
+  }
+
+  ...
+
+  my $obj = Base->new(
+    as  => [ 'Sub1' ],
+    num => $unreliable_source,
+  );
+
+  if ($obj->has_class_error) {
+
+    if ($obj->class_error
+      ->isa('Moose::Exception::ValidationFailedForTypeConstraint') {
+
+      # User error, e.g. HTTP 400
+
+    } else {
+
+      # Possible system error, e.g. HTTP 500
+
+    }
+
+  }
+
+=head1 DESCRIPTION
+
+This is a L<Moose> extension that allows you to instantiate objects
+that will will fail over on construction and return an alternative
+class if there is a problem.
+
+The use case is for classes in systems with unreliable input. It
+allows you to create a base class that can handle errors, but use
+subclasses where the attributes correspond to use input.
+
+For example, you could use this for a L<Web::Machine::Resource> class
+where the attributes correspond to URL paramaters.  If an invalid
+parameter is given, then the base class can handle this gracefully
+instead of treating it as an internal server error.
+
+It works by first checking the type constraints of the attributes, to
+see if there are any obvious errors that might cause instantiation to
+fail.  If they succeed, it then calls the C<BUILD> method and checks
+for failures there.
+
+=head1 ATTRIBUTES
+
+=head2 C<as_class>
+
+This contains a list of subclasses to instantiate the object as. The
+first one that succeeds is used. Later classes are fallback classes.
+
+Note: in the constructor, use C<as>.
+
 =cut
 
 has as_class => (
@@ -28,6 +100,17 @@ sub _build_as_class {
     [];
 }
 
+=head2 C<class_error>
+
+If there was an error, then C<has_class_error> is true and
+C<class_error> returns the error from the last unucessful attempt to
+instantiate a class.
+
+Note that if there are multiple failover classes, then earlier
+failures will be lost.
+
+=cut
+
 has class_error => (
     is        => 'ro',
     writer    => '_set_class_error',
@@ -35,6 +118,20 @@ has class_error => (
     clearer   => 'clear_class_error',
     init_arg  => undef,
 );
+
+=head1 METHODS
+
+=head2 C<CHECK_CONSTRAINTS>
+
+  if (my $error = $class->CHECK_CONSTRAINTS( \%args )) {
+    ...
+    }
+
+This is an internal method used for checking whether a hash reference
+of arguments meets the type or requirement constraints of the
+constructor, without actually trying to construct the object.
+
+=cut
 
 sub CHECK_CONSTRAINTS {
     my ( $self, $args ) = @_;
