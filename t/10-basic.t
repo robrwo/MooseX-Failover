@@ -144,8 +144,15 @@ use Test::Most;
       'Moose::Exception::AttributeIsRequired';
 
     is $error->attribute_name, 'q_str', 'attribute_name';
-    is $error->class_name, 'Sub2';
+    is $error->class_name, 'Sub2', 'class_name';
 }
 
+{
+    throws_ok {
+        my $obj = Base->new(
+            as => [ 'Yuck' ],
+        );
+    } qr/Unable to load Yuck/, 'non-existent class';
+}
 
 done_testing;
