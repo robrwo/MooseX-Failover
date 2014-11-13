@@ -5,7 +5,7 @@ use Test::Most;
     package Base;
 
     use Moose;
-    extends 'MooseX::Monadic';
+    extends 'MooseX::Failover';
 
     1;
 }
@@ -54,7 +54,7 @@ use Test::Most;
 
 {
     my $obj = Base->new();
-    isa_ok $obj, 'MooseX::Monadic';
+    isa_ok $obj, 'MooseX::Failover';
     isa_ok $obj, 'Base';
     ok !$obj->has_class_error, 'no errors';
 }
@@ -65,7 +65,7 @@ use Test::Most;
         num   => 1,
         r_str => 'x',
     );
-    isa_ok $obj, 'MooseX::Monadic';
+    isa_ok $obj, 'MooseX::Failover';
     isa_ok $obj, 'Base';
     isa_ok $obj, 'Sub1';
     ok !$obj->has_class_error, 'no errors';
@@ -77,7 +77,7 @@ use Test::Most;
         num   => 'x',
         r_str => 'x',
     );
-    isa_ok $obj, 'MooseX::Monadic';
+    isa_ok $obj, 'MooseX::Failover';
     isa_ok $obj, 'Base';
     ok !$obj->isa('Sub1'), 'not a Sub1';
     ok $obj->has_class_error, 'has error';
@@ -96,7 +96,7 @@ use Test::Most;
     my $obj = Base->new(
         as    => [qw/ Sub1 /],
     );
-    isa_ok $obj, 'MooseX::Monadic';
+    isa_ok $obj, 'MooseX::Failover';
     isa_ok $obj, 'Base';
     ok !$obj->isa('Sub1'), 'not a Sub1';
     ok $obj->has_class_error, 'has error';
@@ -117,7 +117,7 @@ use Test::Most;
         r_str => 'x',
         str   => 'y',
     );
-    isa_ok $obj, 'MooseX::Monadic';
+    isa_ok $obj, 'MooseX::Failover';
     isa_ok $obj, 'Base';
     isa_ok $obj, 'Sub1';
     isa_ok $obj, 'Sub2';
@@ -131,7 +131,7 @@ use Test::Most;
         num   => 1,
         r_str => 'x',
     );
-    isa_ok $obj, 'MooseX::Monadic';
+    isa_ok $obj, 'MooseX::Failover';
     isa_ok $obj, 'Base';
     isa_ok $obj, 'Sub1';
     ok !$obj->isa('Sub2'), 'not a Sub2';

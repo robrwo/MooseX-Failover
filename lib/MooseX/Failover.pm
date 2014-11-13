@@ -1,4 +1,4 @@
-package MooseX::Monadic;
+package MooseX::Failover;
 
 use Moose;
 
@@ -11,7 +11,7 @@ use Try::Tiny;
 
 =head1 NAME
 
-MooseX::Monadic - monadic classes with Moose
+MooseX::Failover - monadic classes with Moose
 
 =head1 SYNOPSIS
 
@@ -19,7 +19,7 @@ MooseX::Monadic - monadic classes with Moose
     package Base;
 
     use Moose;
-    extends 'MooseX::Monadic';
+    extends 'MooseX::Failover';
   }
 
   {
