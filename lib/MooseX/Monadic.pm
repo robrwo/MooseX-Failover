@@ -69,9 +69,9 @@ sub CHECK_CONSTRAINTS {
 
                 if ($error) {
                     return ValidationFailedForTypeConstraint->new(
-                        error_message => $error,
-                        value         => $value,
-                        type          => $constraint
+                        value     => $value,
+                        type      => $constraint,
+                        attribute => $attr,
                     );
                 }
 
@@ -83,8 +83,8 @@ sub CHECK_CONSTRAINTS {
             next if $attr->has_default || $attr->has_builder;
 
             return AttributeIsRequired->new(
-                class_name     => ref($self),
-                attribute_name => $arg_name,
+                class_name     => ref($self) || $self,
+                attribute_name => $attr->name,
                 params         => $args,
             );
 
