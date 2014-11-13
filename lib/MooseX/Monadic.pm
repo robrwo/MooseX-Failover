@@ -9,6 +9,12 @@ use Carp;
 use Class::Load qw/ try_load_class /;
 use Try::Tiny;
 
+=head1 NAME
+
+MooseX::Monadic - monadic classes with Moose
+
+=cut
+
 has as_class => (
     is         => 'ro',
     isa        => 'ArrayRef[Str]',
