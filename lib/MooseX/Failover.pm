@@ -9,6 +9,8 @@ use Carp;
 use Class::Load qw/ try_load_class /;
 use Try::Tiny;
 
+use version 0.77; our $VERSION = version->declare('v0.1.0');
+
 =head1 NAME
 
 MooseX::Failover - Instantiate Moose classes with failover
