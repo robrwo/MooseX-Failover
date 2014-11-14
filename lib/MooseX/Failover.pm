@@ -11,7 +11,7 @@ use Try::Tiny;
 
 =head1 NAME
 
-MooseX::Failover - monadic classes with Moose
+MooseX::Failover - Instantiate Moose classes with failover
 
 =head1 SYNOPSIS
 
