@@ -43,6 +43,12 @@ use Test::Most;
     use Moose;
     extends 'Sub1';
 
+    around BUILDARGS => sub {
+      my ($orig, $class, %args) = @_;
+      Test::Most::ok( exists $args{_BUILDARGS}, '_BUILDARGS');
+      $class->$orig(%args);
+    };
+
     has 'q_str' => (
         is       => 'ro',
         isa      => 'Str',
