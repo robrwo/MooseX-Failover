@@ -194,7 +194,7 @@ sub CHECKARGS {
 }
 
 sub BUILD {
-    my ( $self, $args ) = @_;
+    my ( $self, $base_args ) = @_;
 
     my $base_class = ref($self);
     my $base_meta  = $self->meta;
@@ -207,6 +207,7 @@ sub BUILD {
           unless $as_class->isa($base_class);
 
         my $meta = $as_class->meta;
+        my $args = $as_class->BUILDARGS( %{$base_args} );
 
         if ( my $error = $as_class->CHECKARGS($args) ) {
 
