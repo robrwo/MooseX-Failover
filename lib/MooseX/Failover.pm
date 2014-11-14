@@ -250,7 +250,7 @@ sub BUILD {
 
 =head2 C<BUILDARGS>
 
-TODO
+The C<BUILDARGS> method for subclasses is not called.
 
 =cut
 
