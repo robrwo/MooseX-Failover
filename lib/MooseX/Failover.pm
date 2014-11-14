@@ -252,6 +252,31 @@ sub BUILD {
 
 The C<BUILDARGS> method for subclasses is not called.
 
+=head1 AUTHOR
+
+Robert Rothenberg C<<rrwo@cpan.org>>
+
+=head1 Acknowledgements and Contributors
+
+=over
+
+=item Thermeon Europe.
+
+=item Piers Cawley.
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright 2014 Thermeon Europe.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+This program is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
 =cut
 
 no Moose;
