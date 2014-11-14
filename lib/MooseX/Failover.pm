@@ -121,9 +121,9 @@ has class_error => (
 
 =head1 METHODS
 
-=head2 C<CHECK_CONSTRAINTS>
+=head2 C<CHECKARGS>
 
-  if (my $error = $class->CHECK_CONSTRAINTS( \%args )) {
+  if (my $error = $class->CHECKARGS( \%args )) {
     ...
     }
 
@@ -133,7 +133,7 @@ constructor, without actually trying to construct the object.
 
 =cut
 
-sub CHECK_CONSTRAINTS {
+sub CHECKARGS {
     my ( $self, $args ) = @_;
 
     my $meta = $self->meta
@@ -208,7 +208,7 @@ sub BUILD {
 
         my $meta = $as_class->meta;
 
-        if ( my $error = $as_class->CHECK_CONSTRAINTS($args) ) {
+        if ( my $error = $as_class->CHECKARGS($args) ) {
 
             $self->_set_class_error($error);
 
