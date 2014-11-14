@@ -121,6 +121,14 @@ has class_error => (
 
 =head1 METHODS
 
+=cut
+
+around BUILDARGS => sub {
+  my ($orig, $class, %args) = @_;
+  $args{_BUILDARGS} //= { %args };
+  $class->$orig(%args);
+};
+
 =head2 C<CHECKARGS>
 
   if (my $error = $class->CHECKARGS( \%args )) {
@@ -194,7 +202,7 @@ sub CHECKARGS {
 }
 
 sub BUILD {
-    my ( $self, $args ) = @_;
+    my ( $self, $base_args ) = @_;
 
     my $base_class = ref($self);
     my $base_meta  = $self->meta;
@@ -207,6 +215,7 @@ sub BUILD {
           unless $as_class->isa($base_class);
 
         my $meta = $as_class->meta;
+        my $args = $as_class->BUILDARGS( %{ $base_args->{_BUILDARGS} } );
 
         if ( my $error = $as_class->CHECKARGS($args) ) {
 
@@ -250,7 +259,13 @@ sub BUILD {
 
 =head2 C<BUILDARGS>
 
-The C<BUILDARGS> method for subclasses is not called.
+Because C<BUILDARGS> should be called in the superclass, what the
+extension tries to do is save the original arguments in the
+"_BUILDARGS" key and pass them to the classes before checking argument
+validity.
+
+If your base class modifies C<BUILDARGS>, then it will need to save
+the original arguments in that key before calling the original.
 
 =head1 AUTHOR
 
