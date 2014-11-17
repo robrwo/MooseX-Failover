@@ -60,6 +60,9 @@ MooseX::Failover - Instantiate Moose classes with failover
 
 =head1 DESCRIPTION
 
+WARNING: This is a purely speculative module, and will be rewritten or
+scrapped entirely.
+
 This is a L<Moose> extension that allows you to instantiate objects
 that will will fail over on construction and return an alternative
 class if there is a problem.
