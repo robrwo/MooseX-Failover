@@ -2,20 +2,10 @@ use Test::Most;
 
 {
 
-    package Base;
-
-    use Moose;
-    extends 'MooseX::Failover';
-
-    1;
-}
-
-{
-
     package Sub1;
 
     use Moose;
-    extends 'Base';
+    with 'MooseX::Failover';
 
     has num => (
         is  => 'ro',
@@ -38,18 +28,13 @@ use Test::Most;
 }
 
 {
+
     package Sub2;
 
     use Moose;
     extends 'Sub1';
 
-    around BUILDARGS => sub {
-      my ($orig, $class, %args) = @_;
-      Test::Most::ok( exists $args{_BUILDARGS}, '_BUILDARGS');
-      $class->$orig(%args);
-    };
-
-    has 'q_str' => (
+    has q_str => (
         is       => 'ro',
         isa      => 'Str',
         required => 1,
@@ -59,106 +44,76 @@ use Test::Most;
 }
 
 {
-    my $obj = Base->new();
-    isa_ok $obj, 'MooseX::Failover';
-    isa_ok $obj, 'Base';
-    ok !$obj->has_class_error, 'no errors';
+
+    package Failover;
+
+    use Moose;
+
+    has error => ( is => 'ro', );
+
 }
 
 {
-    my $obj = Base->new(
-        as    => [qw/ Sub1 /],
-        num   => 1,
-        r_str => 'x',
+    note "no errors";
+
+    my $obj = Sub1->new(
+        num   => 123,
+        r_str => 'test',
     );
-    isa_ok $obj, 'MooseX::Failover';
-    isa_ok $obj, 'Base';
+
     isa_ok $obj, 'Sub1';
-    ok !$obj->has_class_error, 'no errors';
 }
 
 {
-    my $obj = Base->new(
-        as    => [qw/ Sub1 /],
-        num   => 'x',
-        r_str => 'x',
-    );
-    isa_ok $obj, 'MooseX::Failover';
-    isa_ok $obj, 'Base';
-    ok !$obj->isa('Sub1'), 'not a Sub1';
-    ok $obj->has_class_error, 'has error';
+    note "errors with no failover";
 
-    ok my $error = $obj->class_error, 'got error';
-
-    isa_ok $error,
-      'Moose::Exception::ValidationFailedForTypeConstraint';
-
-    is $error->attribute->name, 'num', 'attribute';
-    is $error->value, 'x', 'value';
-
-}
-
-{
-    my $obj = Base->new(
-        as    => [qw/ Sub1 /],
-    );
-    isa_ok $obj, 'MooseX::Failover';
-    isa_ok $obj, 'Base';
-    ok !$obj->isa('Sub1'), 'not a Sub1';
-    ok $obj->has_class_error, 'has error';
-
-    ok my $error = $obj->class_error, 'got error';
-
-    isa_ok $error,
-      'Moose::Exception::AttributeIsRequired';
-
-    is $error->attribute_name, 'r_str', 'attribute_name';
-    is $error->class_name, 'Sub1', 'class_name';
-}
-
-{
-    my $obj = Base->new(
-        as    => [qw/ Sub2 Sub1 /],
-        num   => 1,
-        r_str => 'x',
-        str   => 'y',
-    );
-    isa_ok $obj, 'MooseX::Failover';
-    isa_ok $obj, 'Base';
-    isa_ok $obj, 'Sub1';
-    isa_ok $obj, 'Sub2';
-
-    ok !$obj->has_class_error, 'no errors';
-}
-
-{
-    my $obj = Base->new(
-        as    => [qw/ Sub2 Sub1 /],
-        num   => 1,
-        r_str => 'x',
-    );
-    isa_ok $obj, 'MooseX::Failover';
-    isa_ok $obj, 'Base';
-    isa_ok $obj, 'Sub1';
-    ok !$obj->isa('Sub2'), 'not a Sub2';
-
-    ok $obj->has_class_error, 'has error';
-
-    ok my $error = $obj->class_error, 'got error';
-
-    isa_ok $error,
-      'Moose::Exception::AttributeIsRequired';
-
-    is $error->attribute_name, 'q_str', 'attribute_name';
-    is $error->class_name, 'Sub2', 'class_name';
-}
-
-{
     throws_ok {
-        my $obj = Base->new(
-            as => [ 'Yuck' ],
-        );
-    } qr/Unable to load Yuck/, 'non-existent class';
+        my $obj = Sub1->new( num => 123, );
+    }
+    qr/Attribute \(r_str\) is required/, 'expected error';
+
+}
+
+{
+    note "errors with failover";
+
+    my $obj = Sub1->new(
+        num         => 123,
+        failover_to => 'Failover',
+    );
+
+    isa_ok $obj, 'Failover';
+}
+
+{
+    note "errors with failover (err_arg)";
+
+    my $obj = Sub1->new(
+        num         => 123,
+        failover_to => {
+            class   => 'Failover',
+            err_arg => 'error',
+        },
+    );
+
+    isa_ok $obj, 'Failover';
+    isa_ok $obj->error, 'Moose::Exception::AttributeIsRequired';
+}
+
+{
+    note "errors with failover (err_arg)";
+
+    my $obj = Sub1->new(
+        num         => '123x',
+        r_str       => 'test',
+        failover_to => {
+            class   => 'Failover',
+            err_arg => 'error',
+        },
+    );
+
+    isa_ok $obj, 'Failover';
+    isa_ok $obj->error, 'Moose::Exception::ValidationFailedForTypeConstraint';
 }
 
 done_testing;
