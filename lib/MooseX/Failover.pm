@@ -17,14 +17,73 @@ MooseX::Failover - Instantiate Moose classes with failover
 
 =head1 SYNOPSIS
 
+  # In your class:
+
+  package MyClass;
+
+  use Moose;
+  with 'MooseX::Failover';
+
+  # When using the class
+
+  my $obj = MyClass->new( %args, failover_to => 'OtherClass' );
+
+  # If %args contains missing or invalid values or new otherwise
+  # fails, then $obj will be of type "OtherClass".
 
 =head1 DESCRIPTION
 
 WARNING: This is a purely speculative module, and will be rewritten or
 scrapped entirely.
 
+This role provides constructor failover for L<Moose> classes.
 
-=head1 ATTRIBUTES
+If a class cannot be instantiated because of invalid arguments
+(perhaps from an untrusted source), then instead it returns the
+failover class (passing the same arguments to that class).
+
+This allows for cleaner design, by not forcing you to duplicate type
+checking for class parameters.
+
+=head1 ARGUMENTS
+
+=head2 C<failover_to>
+
+This argument should contain a hash reference with the following keys:
+
+=over
+
+=item C<class>
+
+The name of the class to fail over to.
+
+This can be an array reference of multiple classes.
+
+=item C<args>
+
+An array reference of arguments to pass to the failover class.  When
+omitted, then the same arguments will be passed to it.
+
+=item C<err_arg>
+
+If specified, this is the name of the constructor argument to pass the
+error to.  This is useful if the failover class can inspect the error
+and act appropriately.
+
+For example, if the original class is a handler for a website, where
+the attributes correspond to URL parameters, then the failover class
+can return HTTP 400 responses if the errors are for invalid
+parameters.
+
+=back
+
+Note that
+
+  failover_to => 'OtherClass'
+
+is equivalent to
+
+  failover_to => { class => 'OtherClass' }
 
 =cut
 
