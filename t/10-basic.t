@@ -185,4 +185,23 @@ use Test::Most;
     isa_ok $obj->error, 'Moose::Exception::AttributeIsRequired';
 }
 
+{
+    note "errors with failover (err_arg ignored, list of classes)";
+
+    my %args = ( num => 123 );
+
+    my $obj = Sub2->new(
+        %args,
+        failover_to => {
+            class   => [qw/ Sub1 Failover /],
+            err_arg => 'error',
+            args    => [ %args, ],
+        },
+    );
+
+    isa_ok $obj, 'Failover';
+    isa_ok $obj->error, 'Moose::Exception::AttributeIsRequired';
+}
+
+
 done_testing;

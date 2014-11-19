@@ -62,12 +62,21 @@ sub _next_new {
     my $next_class = $next->{class}
       or croak $error;
 
+    my $continue = 0;
+    if ( ref $next_class ) {
+      $next_class = shift @{ $next->{class} };
+      $continue = 1;
+    }
+
     try_load_class($next_class)
       or croak "unable to load class ${next_class}";
 
     my @next_args = @{ $next->{args} // $l_args };
     if ( $next->{err_arg} ) {
         push @next_args, $next->{err_arg} => $error;
+    }
+    if ($continue) {
+      push @next_args, failover_to => $next;
     }
 
     return $next_class->new(@next_args);
