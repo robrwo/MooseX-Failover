@@ -98,8 +98,6 @@ around new => sub {
 
     my $args = $class->BUILDARGS(@args);
 
-    # TODO: no failover_to
-
     my $next =
       ( ref $args->{failover_to} )
       ? $args->{failover_to}
