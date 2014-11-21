@@ -66,14 +66,16 @@ omitted, then the same arguments will be passed to it.
 
 =item C<err_arg>
 
-If specified, this is the name of the constructor argument to pass the
-error to.  This is useful if the failover class can inspect the error
-and act appropriately.
+This is the name of the constructor argument to pass the error to (it
+defaults to "error".  This is useful if the failover class can inspect
+the error and act appropriately.
 
 For example, if the original class is a handler for a website, where
 the attributes correspond to URL parameters, then the failover class
 can return HTTP 400 responses if the errors are for invalid
 parameters.
+
+To disable it, set it to C<undef>.
 
 =back
 
@@ -101,7 +103,7 @@ around new => sub {
     my $next =
       ( ref $args->{failover_to} )
       ? $args->{failover_to}
-      : { class => $args->{failover_to} };
+      : { class => $args->{failover_to}, err_arg => 'error' };
 
     if ( my $error = $class->CHECKARGS($args) ) {
         return $class->_next_new( $next, $error, \@args );
