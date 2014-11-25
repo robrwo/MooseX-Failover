@@ -2,12 +2,8 @@ package MooseX::Failover;
 
 use Moose::Role;
 
-use aliased 'Moose::Exception::AttributeIsRequired';
-use aliased 'Moose::Exception::ValidationFailedForTypeConstraint';
-
 use Carp;
 use Class::Load qw/ try_load_class /;
-use Try::Tiny;
 
 use version 0.77; our $VERSION = version->declare('v0.1.0');
 
@@ -103,16 +99,7 @@ around new => sub {
       ? $args->{failover_to}
       : { class => $args->{failover_to}, err_arg => 'error' };
 
-    if ( my $error = $class->CHECKARGS($args) ) {
-        return $class->_next_new( $next, $error, \@args );
-    }
-
-    try {
-        return $class->$orig(@args);
-    }
-    catch {
-        return $class->_next_new( $next, $_, \@args );
-    };
+    eval { $class->$orig(@args) } || $class->_next_new( $next, $@, \@args );
 };
 
 sub _next_new {
@@ -139,76 +126,6 @@ sub _next_new {
     }
 
     return $next_class->new(@next_args);
-}
-
-=head2 C<CHECKARGS>
-
-  if (my $error = $class->CHECKARGS( \%args )) {
-    ...
-    }
-
-This is an internal method used for checking whether a hash reference
-of arguments meets the type or requirement constraints of the
-constructor, without actually trying to construct the object.
-
-=cut
-
-sub CHECKARGS {
-    my ( $class, $args ) = @_;
-
-    my $meta = $class->meta
-      or return;
-
-    foreach my $attr ( $meta->get_all_attributes ) {
-
-        next unless defined $attr->init_arg;    # Skip if no init_arg
-
-        # Skip, because the initializer calls the writer to set
-        # the initial value.  We have no means of testing the
-        # value before it's set (and it may not even be used by
-        # the initializer).
-
-        next if $attr->has_initializer;
-
-        my $arg_name = $attr->init_arg;
-
-        if ( exists $args->{$arg_name} ) {
-
-            if ( my $constraint = $attr->type_constraint ) {
-
-                my $value = $args->{$arg_name};
-
-                my $error = $constraint->validate(
-                      $constraint->has_coercion
-                    ? $constraint->coerce($value)
-                    : $value
-                );
-
-                if ($error) {
-                    return ValidationFailedForTypeConstraint->new(
-                        value     => $value,
-                        type      => $constraint,
-                        attribute => $attr,
-                    );
-                }
-
-            }
-
-        }
-        elsif ( $attr->is_required ) {
-
-            next if $attr->has_default || $attr->has_builder;
-
-            return AttributeIsRequired->new(
-                class_name => ref($class) || $class,
-                attribute_name => $attr->name,
-                params         => $args,
-            );
-
-        }
-    }
-
-    return;
 }
 
 =head1 AUTHOR
