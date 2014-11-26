@@ -82,6 +82,7 @@ use Test::Most;
 
     throws_ok {
         my $obj = Sub1->new( num => 123, );
+        fail 'no object';
     }
     qr/Attribute \(r_str\) is required/, 'expected error';
 
@@ -203,5 +204,23 @@ use Test::Most;
     isa_ok $obj->error, 'Moose::Exception::AttributeIsRequired';
 }
 
+{
+    note "bad failover";
+
+    my %args = ( num => 123 );
+
+    throws_ok {
+        my $obj = Sub2->new(
+            %args,
+            failover_to => {
+                class   => [qw/ Sub1 Sub1 /],
+                err_arg => 'error',
+                args    => \%args,
+            },
+        );
+        fail 'no object';
+    }
+    qr/Attribute \(r_str\) is required/, 'bad failover';
+}
 
 done_testing;
