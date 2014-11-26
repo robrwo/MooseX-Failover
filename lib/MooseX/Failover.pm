@@ -8,6 +8,9 @@ use PerlX::Maybe;
 
 use version 0.77; our $VERSION = version->declare('v0.1.0');
 
+# RECOMMEND PREREQ: Class::Load::XS
+# RECOMMEND PREREQ: PerlX::Maybe::XS
+
 =head1 NAME
 
 MooseX::Failover - Instantiate Moose classes with failover
