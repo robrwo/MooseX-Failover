@@ -170,13 +170,13 @@ use Test::Most;
         %args,
         failover_to => {
             class => 'Sub1',
-            args  => [
+            args  => {
                 %args,
                 failover_to => {
                     class   => 'Failover',
                     err_arg => 'error',
                 }
-            ],
+            },
         },
 
     );
@@ -195,7 +195,7 @@ use Test::Most;
         failover_to => {
             class   => [qw/ Sub1 Failover /],
             err_arg => 'error',
-            args    => [ %args, ],
+            args    => \%args,
         },
     );
 

@@ -4,6 +4,7 @@ use Moose::Role;
 
 use Carp;
 use Class::Load qw/ try_load_class /;
+use PerlX::Maybe;
 
 use version 0.77; our $VERSION = version->declare('v0.1.0');
 
@@ -57,7 +58,7 @@ This can be an array reference of multiple classes.
 
 =item C<args>
 
-An array reference of arguments to pass to the failover class.  When
+A hash reference of arguments to pass to the failover class.  When
 omitted, then the same arguments will be passed to it.
 
 =item C<err_arg>
@@ -90,42 +91,38 @@ is equivalent to
 =cut
 
 around new => sub {
-    my ( $orig, $class, @args ) = @_;
-
-    my $args = $class->BUILDARGS(@args);
+    my ( $orig, $class, %args ) = @_;
 
     my $next =
-      ( ref $args->{failover_to} )
-      ? $args->{failover_to}
-      : { class => $args->{failover_to}, err_arg => 'error' };
+      ( ref $args{failover_to} )
+      ? $args{failover_to}
+      : { class => $args{failover_to} };
 
-    eval { $class->$orig(@args) } || $class->_next_new( $next, $@, \@args );
+    $next->{err_arg} = 'error' unless exists $next->{err_arg};
+
+    eval { $class->$orig(%args) } || $class->_failover_new( $next, $@, \%args );
 };
 
-sub _next_new {
-    my ( $class, $next, $error, $l_args ) = @_;
+sub _failover_new {
+    my ( $class, $next, $error, $args ) = @_;
 
-    my $next_class = $next->{class}
-      or croak $error;
-
-    my $continue = 0;
+    my $next_next;
+    my $next_class = $next->{class};
     if ( ref $next_class ) {
-      $next_class = shift @{ $next->{class} };
-      $continue = 1;
+        $next_class = shift @{ $next->{class} };
+        $next_next  = $next;
     }
+
+    croak $error unless $next_class;
 
     try_load_class($next_class)
       or croak "unable to load class ${next_class}";
 
-    my @next_args = @{ $next->{args} // $l_args };
-    if ( $next->{err_arg} ) {
-        push @next_args, $next->{err_arg} => $error;
-    }
-    if ($continue) {
-      push @next_args, failover_to => $next;
-    }
-
-    return $next_class->new(@next_args);
+    $next_class->new(
+        %{ $next->{args} // $args },
+        maybe $next->{err_arg} => $error,
+        maybe 'failover_to'    => $next_next,
+    );
 }
 
 =head1 AUTHOR
