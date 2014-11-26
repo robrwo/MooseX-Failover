@@ -1,13 +1,10 @@
 package MooseX::Failover;
 
-use Moose;
-
-use aliased 'Moose::Exception::AttributeIsRequired';
-use aliased 'Moose::Exception::ValidationFailedForTypeConstraint';
+use Moose::Role;
 
 use Carp;
 use Class::Load qw/ try_load_class /;
-use Try::Tiny;
+use PerlX::Maybe;
 
 use version 0.77; our $VERSION = version->declare('v0.1.0');
 
@@ -17,266 +14,122 @@ MooseX::Failover - Instantiate Moose classes with failover
 
 =head1 SYNOPSIS
 
-  {
-    package Base;
+  # In your class:
 
-    use Moose;
-    extends 'MooseX::Failover';
-  }
+  package MyClass;
 
-  {
-    package Sub1;
+  use Moose;
+  with 'MooseX::Failover';
 
-    use Moose;
-    extends 'Base';
+  # When using the class
 
-    has num => (
-        is  => 'ro',
-        isa => 'Int',
-    );
-  }
+  my $obj = MyClass->new( %args, failover_to => 'OtherClass' );
 
-  ...
-
-  my $obj = Base->new(
-    as  => [ 'Sub1' ],
-    num => $unreliable_source,
-  );
-
-  if ($obj->has_class_error) {
-
-    if ($obj->class_error
-      ->isa('Moose::Exception::ValidationFailedForTypeConstraint') {
-
-      # User error, e.g. HTTP 400
-
-    } else {
-
-      # Possible system error, e.g. HTTP 500
-
-    }
-
-  }
+  # If %args contains missing or invalid values or new otherwise
+  # fails, then $obj will be of type "OtherClass".
 
 =head1 DESCRIPTION
 
 WARNING: This is a purely speculative module, and will be rewritten or
 scrapped entirely.
 
-This is a L<Moose> extension that allows you to instantiate objects
-that will will fail over on construction and return an alternative
-class if there is a problem.
+This role provides constructor failover for L<Moose> classes.
 
-The use case is for classes in systems with unreliable input. It
-allows you to create a base class that can handle errors, but use
-subclasses where the attributes correspond to use input.
+If a class cannot be instantiated because of invalid arguments
+(perhaps from an untrusted source), then instead it returns the
+failover class (passing the same arguments to that class).
 
-For example, you could use this for a L<Web::Machine::Resource> class
-where the attributes correspond to URL paramaters.  If an invalid
-parameter is given, then the base class can handle this gracefully
-instead of treating it as an internal server error.
+This allows for cleaner design, by not forcing you to duplicate type
+checking for class parameters.
 
-It works by first checking the type constraints of the attributes, to
-see if there are any obvious errors that might cause instantiation to
-fail.  If they succeed, it then calls the C<BUILD> method and checks
-for failures there.
+=head1 ARGUMENTS
 
-=head1 ATTRIBUTES
+=head2 C<failover_to>
 
-=head2 C<as_class>
+This argument should contain a hash reference with the following keys:
 
-This contains a list of subclasses to instantiate the object as. The
-first one that succeeds is used. Later classes are fallback classes.
+=over
 
-Note: in the constructor, use C<as>.
+=item C<class>
+
+The name of the class to fail over to.
+
+This can be an array reference of multiple classes.
+
+=item C<args>
+
+A hash reference of arguments to pass to the failover class.  When
+omitted, then the same arguments will be passed to it.
+
+=item C<err_arg>
+
+This is the name of the constructor argument to pass the error to (it
+defaults to "error".  This is useful if the failover class can inspect
+the error and act appropriately.
+
+For example, if the original class is a handler for a website, where
+the attributes correspond to URL parameters, then the failover class
+can return HTTP 400 responses if the errors are for invalid
+parameters.
+
+To disable it, set it to C<undef>.
+
+=back
+
+Note that
+
+  failover_to => 'OtherClass'
+
+is equivalent to
+
+  failover_to => { class => 'OtherClass' }
 
 =cut
-
-has as_class => (
-    is         => 'ro',
-    isa        => 'ArrayRef[Str]',
-    builder    => '_build_as_class',
-    init_arg   => 'as',
-    auto_deref => 1,
-);
-
-sub _build_as_class {
-    my ($self) = @_;
-    [];
-}
-
-=head2 C<class_error>
-
-If there was an error, then C<has_class_error> is true and
-C<class_error> returns the error from the last unucessful attempt to
-instantiate a class.
-
-Note that if there are multiple failover classes, then earlier
-failures will be lost.
-
-=cut
-
-has class_error => (
-    is        => 'ro',
-    writer    => '_set_class_error',
-    predicate => 'has_class_error',
-    clearer   => 'clear_class_error',
-    init_arg  => undef,
-);
 
 =head1 METHODS
 
 =cut
 
-around BUILDARGS => sub {
-  my ($orig, $class, %args) = @_;
-  $args{_BUILDARGS} //= { %args };
-  $class->$orig(%args);
+around new => sub {
+    my ( $orig, $class, %args ) = @_;
+
+    my $next =
+      ( ref $args{failover_to} )
+      ? $args{failover_to}
+      : { class => $args{failover_to} };
+
+    $next->{err_arg} = 'error' unless exists $next->{err_arg};
+
+    eval { $class->$orig(%args) } || $class->_failover_new( $next, $@, \%args );
 };
 
-=head2 C<CHECKARGS>
+sub _failover_new {
+    my ( $class, $next, $error, $args ) = @_;
 
-  if (my $error = $class->CHECKARGS( \%args )) {
-    ...
+    my $next_next;
+    my $next_class = $next->{class};
+    if ( ref $next_class ) {
+        $next_class = shift @{ $next->{class} };
+        $next_next  = $next;
     }
 
-This is an internal method used for checking whether a hash reference
-of arguments meets the type or requirement constraints of the
-constructor, without actually trying to construct the object.
+    croak $error unless $next_class;
 
-=cut
+    try_load_class($next_class)
+      or croak "unable to load class ${next_class}";
 
-sub CHECKARGS {
-    my ( $self, $args ) = @_;
-
-    my $meta = $self->meta
-      or return;
-
-    foreach my $attr ( $meta->get_all_attributes ) {
-
-        next unless defined $attr->init_arg;    # Skip if no init_arg
-
-        # Skip, because the initializer calls the writer to set
-        # the initial value.  We have no means of testing the
-        # value before it's set (and it may not even be used by
-        # the initializer).
-
-        next if $attr->has_initializer;
-
-        my $arg_name = $attr->init_arg;
-
-        if ( exists $args->{$arg_name} ) {
-
-            if ( my $constraint = $attr->type_constraint ) {
-
-                my $value = $args->{$arg_name};
-
-                my $error = $constraint->validate(
-                      $constraint->has_coercion
-                    ? $constraint->coerce($value)
-                    : $value
-                );
-
-                if ($error) {
-                    return ValidationFailedForTypeConstraint->new(
-                        value     => $value,
-                        type      => $constraint,
-                        attribute => $attr,
-                    );
-                }
-
-            }
-
-        }
-        elsif ( $attr->is_required ) {
-
-            next if $attr->has_default || $attr->has_builder;
-
-            return AttributeIsRequired->new(
-                class_name     => ref($self) || $self,
-                attribute_name => $attr->name,
-                params         => $args,
-            );
-
-        }
-
-    }
-
-    return;
-
+    $next_class->new(
+        %{ $next->{args} // $args },
+        maybe $next->{err_arg} => $error,
+        maybe 'failover_to'    => $next_next,
+    );
 }
-
-sub BUILD {
-    my ( $self, $base_args ) = @_;
-
-    my $base_class = ref($self);
-    my $base_meta  = $self->meta;
-
-    foreach my $as_class ( $self->as_class ) {
-
-        try_load_class($as_class) or confess "Unable to load ${as_class}";
-
-        confess "${as_class} is not a ${base_class}"
-          unless $as_class->isa($base_class);
-
-        my $meta = $as_class->meta;
-        my $args = $as_class->BUILDARGS( %{ $base_args->{_BUILDARGS} } );
-
-        if ( my $error = $as_class->CHECKARGS($args) ) {
-
-            $self->_set_class_error($error);
-
-        }
-        else {
-
-            try {
-                $meta->rebless_instance( $self, %{$args} );
-
-                # Reblessing does not actually call BUILD,
-                # so we do this manually.
-
-                my $stash = $meta->{_package_stash};
-                if ( my $build = $stash->get_symbol('&BUILD') ) {
-                    $self->$build();
-                }
-
-            }
-            catch {
-
-                # Note that we have no control of any side
-                # effects from calling BUILD.
-
-                my $error = $_;
-                $base_meta->rebless_instance_back($self);
-                $self->_set_class_error($error);
-
-            };
-
-        }
-
-        last if ref($self) ne $base_class;
-
-    }
-
-}
-
-=head1 KNOWN ISSUES
-
-=head2 C<BUILDARGS>
-
-Because C<BUILDARGS> should be called in the superclass, what the
-extension tries to do is save the original arguments in the
-"_BUILDARGS" key and pass them to the classes before checking argument
-validity.
-
-If your base class modifies C<BUILDARGS>, then it will need to save
-the original arguments in that key before calling the original.
 
 =head1 AUTHOR
 
 Robert Rothenberg C<<rrwo@cpan.org>>
 
-=head1 Acknowledgements and Contributors
+=head1 Acknowledgements
 
 =over
 
