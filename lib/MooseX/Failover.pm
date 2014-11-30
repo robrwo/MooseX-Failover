@@ -33,9 +33,6 @@ MooseX::Failover - Instantiate Moose classes with failover
 
 =head1 DESCRIPTION
 
-WARNING: This is a purely speculative module, and will be rewritten or
-scrapped entirely.
-
 This role provides constructor failover for L<Moose> classes.
 
 If a class cannot be instantiated because of invalid arguments
@@ -87,7 +84,22 @@ is equivalent to
 
   failover_to => { class => 'OtherClass' }
 
-=cut
+Note that this is not an attribute.  You can specify a default
+failover as part of the class definition by defining an attribute:
+
+  has failover_to => (
+      is      => 'ro',
+      isa     => 'HashRef',
+      default => sub {
+          {
+              class   => 'Failover',
+              err_arg => 'error',
+          };
+      },
+  );
+
+Note that changing the C<init_arg> of the attribute will have no
+effect.  This can always be overridden in the constructor.
 
 =head1 METHODS
 
@@ -96,15 +108,24 @@ is equivalent to
 around new => sub {
     my ( $orig, $class, %args ) = @_;
 
-    my $next =
-      ( ref $args{failover_to} )
-      ? $args{failover_to}
-      : { class => $args{failover_to} };
+    my $failover = $args{failover_to} // $class->_get_failover;
+
+    my $next = ( ref $failover ) ? $failover : { class => $failover };
 
     $next->{err_arg} = 'error' unless exists $next->{err_arg};
 
     eval { $class->$orig(%args) } || $class->_failover_new( $next, $@, \%args );
 };
+
+sub _get_failover {
+    my ($class) = @_;
+
+    my $attr = $class->meta->find_attribute_by_name('failover_to')
+      or return;
+
+    my $builder = $attr->builder // $attr->default // return;
+    $class->$builder();
+}
 
 sub _failover_new {
     my ( $class, $next, $error, $args ) = @_;

@@ -45,6 +45,30 @@ use Test::Most;
 
 {
 
+    package Sub3;
+
+    use Moose;
+    with 'MooseX::Failover';
+
+    has num => (
+        is  => 'ro',
+        isa => 'Int',
+    );
+
+    has failover_to => (
+        is      => 'ro',
+        isa     => 'HashRef',
+        default => sub {
+            {
+                class   => 'Failover',
+                err_arg => 'error',
+            };
+        },
+    );
+}
+
+{
+
     package Failover;
 
     use Moose;
@@ -221,6 +245,17 @@ use Test::Most;
         fail 'no object';
     }
     qr/Attribute \(r_str\) is required/, 'bad failover';
+}
+
+{
+    note "errors with failover";
+
+    my $obj = Sub1->new(
+        num         => 'x',
+        failover_to => 'Failover',
+    );
+
+    isa_ok $obj, 'Failover';
 }
 
 done_testing;
