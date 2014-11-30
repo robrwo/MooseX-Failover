@@ -42,6 +42,11 @@ failover class (passing the same arguments to that class).
 This allows for cleaner design, by not forcing you to duplicate type
 checking for class parameters.
 
+Note that this is roughly equivalent to using
+
+  my $obj = eval { MyClass->new(%args) //
+     OtherClass->new( %args, error => $@ );
+
 =head1 ARGUMENTS
 
 =head2 C<failover_to>
