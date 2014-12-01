@@ -104,6 +104,9 @@ failover as part of the class definition by defining an attribute:
       },
   );
 
+Failover attributes from parent classes are not used. (This
+restriction is to improve the performance.)
+
 =head1 METHODS
 
 =cut
@@ -111,7 +114,7 @@ failover as part of the class definition by defining an attribute:
 around new => sub {
     my ( $orig, $class, %args ) = @_;
 
-    my $attr = $class->meta->find_attribute_by_name('failover_to');
+    my $attr = $class->meta->get_attribute('failover_to');
     my $key = $attr ? $attr->init_arg : 'failover_to';
 
     my $failover;
