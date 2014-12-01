@@ -93,9 +93,10 @@ Note that this is not an attribute.  You can specify a default
 failover as part of the class definition by defining an attribute:
 
   has failover_to => (
-      is      => 'ro',
-      isa     => 'HashRef',
-      default => sub {
+      is       => 'ro',
+      isa      => 'HashRef',
+      init_arg => undef,
+      default  => sub {
           {
               class   => 'Failover',
               err_arg => 'error',
@@ -111,14 +112,14 @@ around new => sub {
     my ( $orig, $class, %args ) = @_;
 
     my $attr = $class->meta->find_attribute_by_name('failover_to');
-    my $key  = $attr ? $attr->init_arg : 'failover_to';
+    my $key = $attr ? $attr->init_arg : 'failover_to';
 
     my $failover;
 
     $failover = $args{$key} if defined $key;
-    if (!$failover and $attr) {
-      my $builder = $attr->builder // $attr->default // return;
-      $failover = $class->$builder();
+    if ( !$failover and $attr ) {
+        my $builder = $attr->builder // $attr->default // return;
+        $failover = $class->$builder();
     }
 
     my $next = ( ref $failover ) ? $failover : { class => $failover };
