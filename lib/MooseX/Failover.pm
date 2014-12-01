@@ -107,8 +107,6 @@ failover as part of the class definition by defining an attribute:
 Failover attributes from parent classes are not used. (This
 restriction is to improve the performance.)
 
-=head1 METHODS
-
 =cut
 
 my $failover_new = sub {
