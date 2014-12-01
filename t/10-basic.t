@@ -64,6 +64,7 @@ use Test::Most;
                 err_arg => 'error',
             };
         },
+        init_arg => undef,
     );
 }
 
@@ -248,11 +249,21 @@ use Test::Most;
 }
 
 {
-    note "errors with failover";
+    note "errors with failover (in class def)";
 
-    my $obj = Sub1->new(
+    my $obj = Sub3->new(
         num         => 'x',
-        failover_to => 'Failover',
+    );
+
+    isa_ok $obj, 'Failover';
+}
+
+{
+    note "errors with failover (in class def)";
+
+    my $obj = Sub3->new(
+        num         => 'x',
+        failover_to => 'Invalid', # ignored
     );
 
     isa_ok $obj, 'Failover';

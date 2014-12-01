@@ -103,9 +103,6 @@ failover as part of the class definition by defining an attribute:
       },
   );
 
-Note that changing the C<init_arg> of the attribute will have no
-effect.  This can always be overridden in the constructor.
-
 =head1 METHODS
 
 =cut
@@ -113,7 +110,16 @@ effect.  This can always be overridden in the constructor.
 around new => sub {
     my ( $orig, $class, %args ) = @_;
 
-    my $failover = $args{failover_to} // $class->_get_failover;
+    my $attr = $class->meta->find_attribute_by_name('failover_to');
+    my $key  = $attr ? $attr->init_arg : 'failover_to';
+
+    my $failover;
+
+    $failover = $args{$key} if defined $key;
+    if (!$failover and $attr) {
+      my $builder = $attr->builder // $attr->default // return;
+      $failover = $class->$builder();
+    }
 
     my $next = ( ref $failover ) ? $failover : { class => $failover };
 
@@ -121,16 +127,6 @@ around new => sub {
 
     eval { $class->$orig(%args) } || $class->_failover_new( $next, $@, \%args );
 };
-
-sub _get_failover {
-    my ($class) = @_;
-
-    my $attr = $class->meta->find_attribute_by_name('failover_to')
-      or return;
-
-    my $builder = $attr->builder // $attr->default // return;
-    $class->$builder();
-}
 
 sub _failover_new {
     my ( $class, $next, $error, $args ) = @_;
