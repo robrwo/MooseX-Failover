@@ -47,6 +47,17 @@ Note that this is roughly equivalent to using
   my $obj = eval { MyClass->new(%args) //
      OtherClass->new( %args, error => $@ );
 
+Note that your failover class should support the same methods as the
+original class.  A use case for this role would be for instantiating
+L<Web::Machine::Resource> objects, where the failover is a
+Web::Machine::Resource object that returns an error page.
+
+Ideally, your failover class would satisy the Liskov Substitution
+Principle, so that (roughly) all provable properties of the original
+class are also provable of the failover class.  In practice, we only
+care about the properties (methods and attributes) that are actually
+used in our programs.
+
 =head1 ARGUMENTS
 
 =head2 C<failover_to>
