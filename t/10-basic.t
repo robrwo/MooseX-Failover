@@ -70,6 +70,25 @@ use Test::Most;
 
 {
 
+    package Sub4;
+
+    use Moose;
+    with 'MooseX::Failover';
+
+    has num => (
+        is  => 'ro',
+        isa => 'Int',
+    );
+
+    has failover_to => (
+        is       => 'ro',
+        isa      => 'HashRef',
+        init_arg => 'err_to',
+    );
+}
+
+{
+
     package Failover;
 
     use Moose;
@@ -251,9 +270,7 @@ use Test::Most;
 {
     note "errors with failover (in class def)";
 
-    my $obj = Sub3->new(
-        num         => 'x',
-    );
+    my $obj = Sub3->new( num => 'x', );
 
     isa_ok $obj, 'Failover';
 }
@@ -263,7 +280,18 @@ use Test::Most;
 
     my $obj = Sub3->new(
         num         => 'x',
-        failover_to => 'Invalid', # ignored
+        failover_to => 'Invalid',    # ignored
+    );
+
+    isa_ok $obj, 'Failover';
+}
+
+{
+    note "errors with failover (in class def)";
+
+    my $obj = Sub4->new(
+        num    => 'x',
+        err_to => 'Failover',
     );
 
     isa_ok $obj, 'Failover';
