@@ -109,28 +109,6 @@ restriction is to improve the performance.)
 
 =cut
 
-my $failover_new = sub {
-    my ( $class, $next, $error, $args ) = @_;
-
-    my $next_next;
-    my $next_class = $next->{class};
-    if ( ref $next_class ) {
-        $next_class = shift @{ $next->{class} };
-        $next_next  = $next;
-    }
-
-    croak $error unless $next_class;
-
-    try_load_class($next_class)
-      or croak "unable to load class ${next_class}";
-
-    $next_class->new(
-        %{ $next->{args} // $args },
-        maybe $next->{err_arg} => $error,
-        maybe 'failover_to'    => $next_next,
-    );
-};
-
 around new => sub {
     my ( $orig, $class, %args ) = @_;
 
@@ -149,7 +127,31 @@ around new => sub {
 
     $next->{err_arg} = 'error' unless exists $next->{err_arg};
 
-    eval { $class->$orig(%args) } || $class->$failover_new( $next, $@, \%args );
+    eval { $class->$orig(%args) } // do {
+
+        my $error = $@;
+        my $next_next;
+        my $next_class = $next->{class};
+        if ( ref $next_class ) {
+            $next_class = shift @{ $next->{class} };
+            $next_next  = $next;
+        }
+
+        croak $error unless $next_class;
+
+        try_load_class($next_class)
+          or croak "unable to load class ${next_class}";
+
+        %args = %{ $next->{args} } if $next->{args};
+
+        $next_class->new(
+            %args,
+            maybe $next->{err_arg} => $error,
+            maybe 'failover_to'    => $next_next,
+        );
+
+    };
+
 };
 
 =head1 AUTHOR
