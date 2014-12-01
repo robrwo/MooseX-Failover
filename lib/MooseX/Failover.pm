@@ -154,7 +154,7 @@ around new => sub {
 
 =head1 AUTHOR
 
-Robert Rothenberg C<<rrwo@cpan.org>>
+Robert Rothenberg C<<rrwo@thermeon.com>>
 
 =head1 Acknowledgements
 
