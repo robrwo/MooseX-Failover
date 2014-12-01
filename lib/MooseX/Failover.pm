@@ -111,28 +111,7 @@ restriction is to improve the performance.)
 
 =cut
 
-around new => sub {
-    my ( $orig, $class, %args ) = @_;
-
-    my $attr = $class->meta->get_attribute('failover_to');
-    my $key = $attr ? $attr->init_arg : 'failover_to';
-
-    my $failover;
-
-    $failover = $args{$key} if defined $key;
-    if ( !$failover and $attr ) {
-        my $builder = $attr->builder // $attr->default // return;
-        $failover = $class->$builder();
-    }
-
-    my $next = ( ref $failover ) ? $failover : { class => $failover };
-
-    $next->{err_arg} = 'error' unless exists $next->{err_arg};
-
-    eval { $class->$orig(%args) } || $class->_failover_new( $next, $@, \%args );
-};
-
-sub _failover_new {
+my $failover_new = sub {
     my ( $class, $next, $error, $args ) = @_;
 
     my $next_next;
@@ -152,7 +131,28 @@ sub _failover_new {
         maybe $next->{err_arg} => $error,
         maybe 'failover_to'    => $next_next,
     );
-}
+};
+
+around new => sub {
+    my ( $orig, $class, %args ) = @_;
+
+    my $attr = $class->meta->get_attribute('failover_to');
+    my $key = $attr ? $attr->init_arg : 'failover_to';
+
+    my $failover;
+
+    $failover = $args{$key} if defined $key;
+    if ( !$failover and $attr ) {
+        my $builder = $attr->builder // $attr->default // return;
+        $failover = $class->$builder();
+    }
+
+    my $next = ( ref $failover ) ? $failover : { class => $failover };
+
+    $next->{err_arg} = 'error' unless exists $next->{err_arg};
+
+    eval { $class->$orig(%args) } || $class->$failover_new( $next, $@, \%args );
+};
 
 =head1 AUTHOR
 
