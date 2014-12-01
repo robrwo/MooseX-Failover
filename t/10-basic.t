@@ -89,6 +89,32 @@ use Test::Most;
 
 {
 
+    package Sub5;
+
+    use Moose;
+    with 'MooseX::Failover';
+
+    has num => (
+        is  => 'ro',
+        isa => 'Int',
+    );
+
+    has failover_to => (
+        is      => 'ro',
+        isa     => 'HashRef',
+        builder => '_build_failover_to',
+    );
+
+    sub _build_failover_to {
+        return {
+            class   => 'Failover',
+            err_arg => 'error',
+        };
+    }
+}
+
+{
+
     package Failover;
 
     use Moose;
@@ -293,6 +319,14 @@ use Test::Most;
         num    => 'x',
         err_to => 'Failover',
     );
+
+    isa_ok $obj, 'Failover';
+}
+
+{
+    note "errors with failover (in class def)";
+
+    my $obj = Sub5->new( num => 'x', );
 
     isa_ok $obj, 'Failover';
 }
