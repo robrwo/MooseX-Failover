@@ -1,4 +1,7 @@
 Revision history for MooseX-Failover
 
 {{$NEXT}}
+
+
+v0.1.0    2014-12-01 17:41:02+00:00 Europe/London
    - Initial version.
