@@ -15,6 +15,8 @@ use version 0.77; our $VERSION = version->declare('v0.1.2');
 
 MooseX::Failover - Instantiate Moose classes with failover
 
+=for readme plugin version
+
 =head1 SYNOPSIS
 
   # In your class:
