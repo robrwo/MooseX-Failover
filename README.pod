@@ -1,0 +1,127 @@
+=head1 NAME
+
+MooseX::Failover - Instantiate Moose classes with failover
+
+=head1 VERSION
+
+v0.1.2
+
+=head1 SYNOPSIS
+
+  # In your class:
+
+  package MyClass;
+
+  use Moose;
+  with 'MooseX::Failover';
+
+  # When using the class
+
+  my $obj = MyClass->new( %args, failover_to => 'OtherClass' );
+
+  # If %args contains missing or invalid values or new otherwise
+  # fails, then $obj will be of type "OtherClass".
+
+=head1 INSTALLATION
+
+See
+L<How to install CPAN modules|http://www.cpan.org/modules/INSTALL.html>.
+
+=head2 Required Modules
+
+This distribution requires Perl v5.10.0.
+
+This distribution requires the following modules:
+
+=over 4
+
+=item * L<Class::Load> (version 0.20)
+
+=item * L<Moose> (version 2.1101)
+
+=item * L<PerlX::Maybe> (version 0.03)
+
+=item * L<Test::Most>
+
+=back
+
+This distribution recommends the following modules:
+
+=over 4
+
+=item * L<Class::Load::XS>
+
+=item * L<PerlX::Maybe::XS>
+
+=back
+
+=head1 RECENT CHANGES
+
+=head2 Documentation
+
+=over 4
+
+=item * 
+
+README is generated using Pod::Readme.
+
+=item * 
+
+README is now in POD format.
+
+=back
+
+See the F<Changes> file for a longer revision history.
+
+=head1 DESCRIPTION
+
+This role provides constructor failover for L<Moose> classes.
+
+If a class cannot be instantiated because of invalid arguments
+(perhaps from an untrusted source), then instead it returns the
+failover class (passing the same arguments to that class).
+
+This allows for cleaner design, by not forcing you to duplicate type
+checking for class parameters.
+
+Note that this is roughly equivalent to using
+
+  my $obj = eval { MyClass->new(%args) //
+     OtherClass->new( %args, error => $@ );
+
+Note that your failover class should support the same methods as the
+original class.  A use case for this role would be for instantiating
+L<Web::Machine::Resource> objects, where the failover is a
+Web::Machine::Resource object that returns an error page.
+
+Ideally, your failover class would satisy the Liskov Substitution
+Principle, so that (roughly) all provable properties of the original
+class are also provable of the failover class.  In practice, we only
+care about the properties (methods and attributes) that are actually
+used in our programs.
+
+=head1 AUTHOR
+
+Robert Rothenberg C<<rrwo@thermeon.com>>
+
+=head1 Acknowledgements
+
+=over
+
+=item Thermeon Europe.
+
+=item Piers Cawley.
+
+=back
+
+=head1 COPYRIGHT
+
+Copyright 2014 Thermeon Europe.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+This program is distributed in the hope that it will be useful, but
+without any warranty; without even the implied warranty of
+merchantability or fitness for a particular purpose.
+
