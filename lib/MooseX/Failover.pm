@@ -6,7 +6,7 @@ use Carp;
 use Class::Load qw/ try_load_class /;
 use PerlX::Maybe;
 
-use version 0.77; our $VERSION = version->declare('v0.1.1');
+use version 0.77; our $VERSION = version->declare('v0.1.2');
 
 # RECOMMEND PREREQ: Class::Load::XS
 # RECOMMEND PREREQ: PerlX::Maybe::XS
@@ -30,6 +30,19 @@ MooseX::Failover - Instantiate Moose classes with failover
 
   # If %args contains missing or invalid values or new otherwise
   # fails, then $obj will be of type "OtherClass".
+
+=begin :readme
+
+=head1 INSTALLATION
+
+See
+L<How to install CPAN modules|http://www.cpan.org/modules/INSTALL.html>.
+
+=for readme plugin requires heading-level=2 title="Required Modules"
+
+=for readme plugin changes
+
+=end :readme
 
 =head1 DESCRIPTION
 
@@ -57,6 +70,8 @@ Principle, so that (roughly) all provable properties of the original
 class are also provable of the failover class.  In practice, we only
 care about the properties (methods and attributes) that are actually
 used in our programs.
+
+=for readme stop
 
 =head1 ARGUMENTS
 
@@ -164,6 +179,8 @@ around new => sub {
     };
 
 };
+
+=for readme continue
 
 =head1 AUTHOR
 
