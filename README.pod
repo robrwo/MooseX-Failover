@@ -4,7 +4,7 @@ MooseX::Failover - Instantiate Moose classes with failover
 
 =head1 VERSION
 
-v0.1.2
+v0.1.3
 
 =head1 SYNOPSIS
 
@@ -39,8 +39,6 @@ This distribution requires the following modules:
 
 =item * L<Moose> (version 2.1101)
 
-=item * L<PerlX::Maybe> (version 0.03)
-
 =item * L<Test::Most>
 
 =back
@@ -51,23 +49,17 @@ This distribution recommends the following modules:
 
 =item * L<Class::Load::XS>
 
-=item * L<PerlX::Maybe::XS>
-
 =back
 
 =head1 RECENT CHANGES
 
-=head2 Documentation
+=head2 Enhancements
 
 =over 4
 
 =item * 
 
-README is generated using Pod::Readme.
-
-=item * 
-
-README is now in POD format.
+PerlX::Maybe is no longer needed.
 
 =back
 

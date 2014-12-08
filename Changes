@@ -1,6 +1,8 @@
 Revision history for MooseX-Failover
 
 {{$NEXT}}
+   [Enhancements]
+   - PerlX::Maybe is no longer needed.
 
 v0.1.2    2014-12-06 17:47:21+00:00 Europe/London
    [Documentation]

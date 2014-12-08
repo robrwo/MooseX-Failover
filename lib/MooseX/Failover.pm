@@ -4,12 +4,10 @@ use Moose::Role;
 
 use Carp;
 use Class::Load qw/ try_load_class /;
-use PerlX::Maybe;
 
 use version 0.77; our $VERSION = version->declare('v0.1.3');
 
 # RECOMMEND PREREQ: Class::Load::XS
-# RECOMMEND PREREQ: PerlX::Maybe::XS
 
 =head1 NAME
 
@@ -172,12 +170,10 @@ around new => sub {
 
         %args = %{ $next->{args} } if $next->{args};
 
-        $next_class->new(
-            %args,
-            maybe $next->{err_arg} => $error,
-            maybe 'failover_to'    => $next_next,
-        );
+        $args{ $next->{err_arg} } = $error if defined $next->{err_arg};
+        $args{failover_to} = $next_next if $next_next;
 
+        $next_class->new( %args, );
     };
 
 };
