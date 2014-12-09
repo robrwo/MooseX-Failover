@@ -203,6 +203,6 @@ merchantability or fitness for a particular purpose.
 
 =cut
 
-no Moose;
+use namespace::autoclean;
 
 1;

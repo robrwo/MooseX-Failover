@@ -39,6 +39,8 @@ This distribution requires the following modules:
 
 =item * L<Moose> (version 2.1101)
 
+=item * L<namespace::autoclean>
+
 =item * L<Test::Most>
 
 =back
