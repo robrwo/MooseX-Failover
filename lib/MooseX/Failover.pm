@@ -138,22 +138,22 @@ restriction is to improve the performance.)
 around new => sub {
     my ( $orig, $class, %args ) = @_;
 
-    my $attr = $class->meta->get_attribute('failover_to');
-    my $key = $attr ? $attr->init_arg : 'failover_to';
-
-    my $failover;
-
-    $failover = $args{$key} if defined $key;
-    if ( !$failover and $attr ) {
-        my $builder = $attr->builder // $attr->default // return;
-        $failover = $class->$builder();
-    }
-
-    my $next = ( ref $failover ) ? $failover : { class => $failover };
-
-    $next->{err_arg} = 'error' unless exists $next->{err_arg};
-
     eval { $class->$orig(%args) } // do {
+
+        my $attr = $class->meta->get_attribute('failover_to');
+        my $key = $attr ? $attr->init_arg : 'failover_to';
+
+        my $failover;
+
+        $failover = $args{$key} if defined $key;
+        if ( !$failover and $attr ) {
+            my $builder = $attr->builder // $attr->default // return;
+            $failover = $class->$builder();
+        }
+
+        my $next = ( ref $failover ) ? $failover : { class => $failover };
+
+        $next->{err_arg} = 'error' unless exists $next->{err_arg};
 
         my $error = $@;
         my $next_next;
