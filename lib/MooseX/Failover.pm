@@ -164,7 +164,7 @@ around new => sub {
             $args{failover_to} = $next;
         }
 
-        croak $args{ $next->{err_arg} } unless $next_class;
+        croak $@ unless $next_class;
 
         try_load_class($next_class)
           or croak "unable to load class ${next_class}";
