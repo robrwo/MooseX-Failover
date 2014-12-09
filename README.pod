@@ -71,7 +71,7 @@ Added note about making classes immutable.
 
 =item * 
 
-Minor optimization.
+Minor optimizations.
 
 =item * 
 

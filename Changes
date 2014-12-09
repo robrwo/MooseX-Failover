@@ -2,7 +2,7 @@ Revision history for MooseX-Failover
 
 {{$NEXT}}
    [Enhancements]
-   - Minor optimization.
+   - Minor optimizations.
 
    - Uses namespace::autoclean.
 
