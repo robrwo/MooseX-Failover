@@ -4,7 +4,7 @@ MooseX::Failover - Instantiate Moose classes with failover
 
 =head1 VERSION
 
-v0.1.3
+v0.1.4
 
 =head1 SYNOPSIS
 
@@ -52,6 +52,16 @@ This distribution recommends the following modules:
 =back
 
 =head1 RECENT CHANGES
+
+=head2 Enhancements
+
+=over 4
+
+=item * 
+
+Minor optimization.
+
+=back
 
 See the F<Changes> file for a longer revision history.
 
