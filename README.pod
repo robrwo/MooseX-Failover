@@ -4,7 +4,7 @@ MooseX::Failover - Instantiate Moose classes with failover
 
 =head1 VERSION
 
-v0.1.4
+v0.2.0_01
 
 =head1 SYNOPSIS
 
