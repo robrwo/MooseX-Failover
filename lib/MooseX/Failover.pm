@@ -5,7 +5,7 @@ use Moose::Role;
 use Carp;
 use Class::Load qw/ try_load_class /;
 
-use version 0.77; our $VERSION = version->declare('v0.1.3');
+use version 0.77; our $VERSION = version->declare('v0.1.4');
 
 # RECOMMEND PREREQ: Class::Load::XS
 
