@@ -153,27 +153,23 @@ around new => sub {
 
         my $next = ( ref $failover ) ? $failover : { class => $failover };
 
-        $next->{err_arg} = 'error' unless exists $next->{err_arg};
+        %args = %{ $next->{args} } if $next->{args};
 
-        my $error = $@;
-        my $next_next;
+        $next->{err_arg} = 'error' unless exists $next->{err_arg};
+        $args{ $next->{err_arg} } = $@ if defined $next->{err_arg};
+
         my $next_class = $next->{class};
         if ( ref $next_class ) {
             $next_class = shift @{ $next->{class} };
-            $next_next  = $next;
+            $args{failover_to} = $next;
         }
 
-        croak $error unless $next_class;
+        croak $args{ $next->{err_arg} } unless $next_class;
 
         try_load_class($next_class)
           or croak "unable to load class ${next_class}";
 
-        %args = %{ $next->{args} } if $next->{args};
-
-        $args{ $next->{err_arg} } = $error if defined $next->{err_arg};
-        $args{failover_to} = $next_next if $next_next;
-
-        $next_class->new( %args, );
+        $next_class->new(%args);
     };
 
 };
