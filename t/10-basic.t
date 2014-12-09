@@ -25,6 +25,7 @@ use Test::Most;
         default  => 'wibble',
     );
 
+    __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 }
 
 {
@@ -41,6 +42,7 @@ use Test::Most;
         init_arg => 'str',
     );
 
+    __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 }
 
 {
@@ -66,6 +68,8 @@ use Test::Most;
         },
         init_arg => undef,
     );
+
+    __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 }
 
 {
@@ -85,6 +89,8 @@ use Test::Most;
         isa      => 'HashRef',
         init_arg => 'err_to',
     );
+
+    __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 }
 
 {
@@ -111,6 +117,8 @@ use Test::Most;
             err_arg => 'error',
         };
     }
+
+    __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
 }
 
 {

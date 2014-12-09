@@ -174,6 +174,15 @@ around new => sub {
 
 };
 
+=head1 KNOWN ISSUES
+
+=head2 Immutable Classes
+
+Because this modifies the constructor, you need to disable inline
+constructors when making this immutable:
+
+  __PACKAGE__->meta->make_immutable( inline_constructor => 0 );
+
 =for readme continue
 
 =head1 AUTHOR

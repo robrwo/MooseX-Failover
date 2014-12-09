@@ -55,6 +55,16 @@ This distribution recommends the following modules:
 
 =head1 RECENT CHANGES
 
+=head2 Documentation
+
+=over 4
+
+=item * 
+
+Added note about making classes immutable.
+
+=back
+
 =head2 Enhancements
 
 =over 4

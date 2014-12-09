@@ -6,6 +6,9 @@ Revision history for MooseX-Failover
 
    - Uses namespace::autoclean.
 
+   [Documentation]
+   - Added note about making classes immutable.
+
 v0.1.3    2014-12-08 18:10:12+00:00 Europe/London
    [Enhancements]
    - PerlX::Maybe is no longer needed.
