@@ -53,16 +53,6 @@ This distribution recommends the following modules:
 
 =head1 RECENT CHANGES
 
-=head2 Enhancements
-
-=over 4
-
-=item * 
-
-PerlX::Maybe is no longer needed.
-
-=back
-
 See the F<Changes> file for a longer revision history.
 
 =head1 DESCRIPTION
