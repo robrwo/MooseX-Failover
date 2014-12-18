@@ -1,6 +1,10 @@
 Revision history for MooseX-Failover
 
 {{$NEXT}}
+   [Documentation]
+    - Fixed typos.
+
+v0.2.0_01 2014-12-09 10:09:01+00:00 Europe/London
    [Enhancements]
    - Minor optimizations.
 
